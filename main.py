@@ -20,7 +20,7 @@ def main():
         print(f"Player {i+1}'s cards are: {card_o}, {card_t}")
         print(hands)
 
-
+    print("Preflop probabilities: " + str(equity(hands, board)))
     #User input for the flop cards, will be able to input the cards and it will remove them from the deck and add them to the board
     streets = [("flop", 3), ("turn", 1), ("river", 1)]
     for count, item in enumerate(streets):
@@ -264,10 +264,3 @@ class Deck:
 
 
 main()
-
-
-
-
-
-
-
