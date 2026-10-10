@@ -4,42 +4,74 @@ from collections import Counter
 import math
 from itertools import combinations
 
-
-def simulation():
-
-    h_num = int(input("How many players are there?: "))
+#mini interface for poker equity calculator, will be able to input the cards and it will calculate the equity of each player based on the known cards and the unknown cards
+def main():
+    h_num = ask_for_player()
     hands = []
     deck = Deck()
+    board = []
     deck.shuffle()
+    #User input for each player's cards, will be able to input the cards and it will remove them from the deck and add them to the player's hand
     for i in range(h_num):
         print(f"Enter Player: {i+1}'s cards")
-        card_o = parse_cards(input("Enter the first card: "))
-        card_t = parse_cards(input("Enter the second card: "))
-        hands.append([deck.deal_to_hand(card_o), deck.deal_to_hand(card_t)])
+        card_o = deck.deal_card_choice(ask_for_card(deck, "Enter the first card: "))
+        card_t = deck.deal_card_choice(ask_for_card(deck,"Enter the second card: "))
+        hands.append([card_o,card_t])
         print(f"Player {i+1}'s cards are: {card_o}, {card_t}")
         print(hands)
 
 
-    #beginning to evaluate cards
-    board = deck.deal_card(5)
+    #User input for the flop cards, will be able to input the cards and it will remove them from the deck and add them to the board
+    streets = [("flop", 3), ("turn", 1), ("river", 1)]
+    for count, item in enumerate(streets):
+            for j in range(item[1]):
+                card = ask_for_card(deck, "Enter the card(s) for " + item[0] + ": ")
+                board.append(deck.deal_card_choice(card))
+            print("Probabilities: " + str(equity(hands, board)))
+            print(f"Current board is: {board}")
+    
+    
+    
 
 
-    # top_hand = None
-    # for hand in hands:
-    #     preflop.append(evaluation(hand))
-    #     flop.append(evaluation(hand+board[:3]))
-    #     turn.append(evaluation(hand + board[:4]))
-    #     river.append(evaluation(hand + board[:5]))
 
-    for street, n in [("Preflop: ", 0), ("Flop: ", 3), ("Turn: ", 4), ("River", 5)]:
-        print(street, equity(hands, board[:n]))
+#Error trapper for cards to ensure inputs are valid and cards are not already used
+def ask_for_card(deck, prompt):
+    valid = False
+    while not valid:
+        try:
+            card = parse_cards(input(prompt))
+            if card in deck.Deck_Cards:
+                valid = True
+                return card
+            else:
+                print("Card is already used, please try again")
+        except(ValueError, IndexError):
+            print("Invalid option, please try again.")
+
+#Error trapper for number of players to make sure its within range        
+def ask_for_player():
+    valid = False
+    while not valid:
+        try:
+            players = int(input("How many players are there?: "))
+            if 2 <= players <= 10:
+                valid = True
+                return players
+            else:
+                print("Please enter number a number from 2 to 10.")
+        except(ValueError, IndexError):
+                print("Invalid option, please try again.")        
 
 
-def equity(hands, board, samples = 20000):#the idea here is to decrease the amount of samples I run as the unknowns decrease, for preflop i wouldn't know the equity but for flop and after i can know exact
+
+#Equity function that calculates chances of winning. Monte Carlo during preflop and exact win percentage for flop, turn and river
+def equity(hands, board, samples = 20000):
         known_cards = []
         for hand in hands:
             known_cards += hand
         known_cards += board
+
 
 
         full_deck = [Card(r,s) for r in range(2,15) for s in"hdsc"]
@@ -57,7 +89,7 @@ def equity(hands, board, samples = 20000):#the idea here is to decrease the amou
 
 
 
-        wins = [0] * len(hands)  # 2 players → [0, 0]
+        wins = [0] * len(hands)
 
         for runout in runouts:
             collection = []
@@ -71,7 +103,7 @@ def equity(hands, board, samples = 20000):#the idea here is to decrease the amou
                     winners.append(i)
 
             for i in winners:
-                wins[i] += 1 / len(winners)  # tie → split
+                wins[i] += 1 / len(winners) 
         return [w / len(runouts) for w in wins]
 
 
@@ -88,11 +120,9 @@ def equity(hands, board, samples = 20000):#the idea here is to decrease the amou
 
 def evaluation(cards):
 
-    ranks = [card.rank for card in cards] #pretty much isolate only the ranks
-    suits = [card.suit for card in cards] #isolates the suits
-    #purpose is so that later we can rank sort and count the card directly instead of the object
+    ranks = [card.rank for card in cards] 
+    suits = [card.suit for card in cards] 
 
-    #this step i need to find pairs and sort them, first step is to use counter to make dictionary of the rank specifically and then I
     rank_counts = Counter(ranks)
     suit_counts = Counter(suits)
 
@@ -123,19 +153,8 @@ def evaluation(cards):
         if card.suit == flush_suit:
             flush_ranks.append(card.rank)
 
-    #straight set up, going to make this in function so i can use later on for straight flush
-    # straight_col = set(ranks)
-    # straight_high = None
-    # consec = 0
-    # for i in range(14, 1, -1):
-    #     if i in straight_col:
-    #         consec += 1
-    #         if consec == 5:
-    #             straight_high = i+4
-    #             break
-    #     else:
-    #         consec = 0
 
+    #straight logic
     def straight_high(ranks):
         straight_col = set(ranks)
         consec = 0
@@ -190,12 +209,6 @@ def evaluation(cards):
     # pairs
     elif len(pairs) == 1:
         top_pair = max(pairs)
-        # kicker  = []  #remove the pair and look at the rest and see what's highest to take it
-        # for r in ranks:
-        #     if r != top_pair:
-        #         kicker.append(r)
-        # kicker.sort(reverse  = True)
-        # kicker = kicker[:3]
         kicker = sorted([r for r in ranks if r != top_pair], reverse = True)[:3]
         return (2, top_pair, *kicker)#return a tuple that can be compared with other ones, *splits it all into a list of numbers
     #high card
@@ -208,37 +221,8 @@ def evaluation(cards):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-    #i like doing a point system, set points for flush, and set points for straight(won't work because i'd have to stagger the points)
-    #logic for
-    #1. Royal Flush, highest straight and same suits -->
-    #2. Straight Flush, same suit straight
-    #3. Same 4 cards, counts logic        -done
-    #4. Full House, counts logic
-    #5. Flush, counts logic
-    #6. Straight, consecutive logic
-    #7. Trips, count logic                -done
-    #8. Two Pair, count                   -done
-    #9. Pair, count -->                   -done
-    #10. High card, count--> can use sort -later
-
-
-
-
-
-
-
-def parse_cards(input):#this one makes it so that the input will be turned into an object, before it was just a string
+#Converts entered values into object
+def parse_cards(input):
     RANK_CHARS = "23456789TJQKA"
     rank = RANK_CHARS.index(input[0].upper())+2
     suit = input[1].lower()
@@ -247,12 +231,12 @@ def parse_cards(input):#this one makes it so that the input will be turned into 
 
 
 
-class Card: #card objects that can be created
+class Card: 
     def __init__(self, rank, suit):
         self.rank = rank
         self.suit = suit
 
-    def __eq__(self, other):#pasted this so that == that is used for the remove card will compare the values instead of whether its the same object
+    def __eq__(self, other):
         return self.rank == other.rank and self.suit == other.suit
 
     def __hash__(self):
@@ -261,7 +245,7 @@ class Card: #card objects that can be created
     def __repr__(self):
         return f"{self.rank}{self.suit}"
 
-class Deck:#helps create 52 cards
+class Deck:
     deck = Deck_Cards = []
     def __init__(self):
         self.deck = Deck_Cards = []
@@ -271,16 +255,15 @@ class Deck:#helps create 52 cards
                 self.Deck_Cards.append(card)
     def shuffle(self):
         random.shuffle(self.Deck_Cards)
-    #ok here i need a function that will be able to randomly deal cards
     def deal_card(self, num_deal):
         return [self.Deck_Cards.pop() for num in range(num_deal)]
-            #now im looking to go back up and work through adding this to each player's hands
-    def deal_to_hand(self, selected_card):
+        
+    def deal_card_choice(self, selected_card):
         self.Deck_Cards.remove(selected_card)
         return selected_card
 
 
-simulation()
+main()
 
 
 
