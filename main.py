@@ -158,7 +158,13 @@ def evaluation(cards):
     def straight_high(ranks):
         straight_col = set(ranks)
         consec = 0
-        for i in range(14, 1, -1):
+        ace_high = 14
+        ace_low = 1
+        if ace_high in ranks:
+            straight_col.add(ace_low)
+            
+
+        for i in range(14, 0, -1):
             if i in straight_col:
                 consec += 1
                 if consec == 5:
@@ -264,3 +270,4 @@ class Deck:
 
 
 main()
+
