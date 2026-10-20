@@ -41,7 +41,7 @@ def ask_for_card(deck, prompt):
     while not valid:
         try:
             card = parse_cards(input(prompt))
-            if card in deck.Deck_Cards:
+            if card in deck.deck_cards:
                 valid = True
                 return card
             else:
@@ -198,7 +198,7 @@ def evaluation(cards):
         return(7, top_set, top_pair)
 
     elif flush_suit is not None:
-        return (6, *sorted(flush_ranks, reverse=True))[:5]
+        return (6, *sorted(flush_ranks, reverse=True)[:5])
     # straight
     elif straight is not None:
         return (5, straight)
@@ -252,20 +252,20 @@ class Card:
         return f"{self.rank}{self.suit}"
 
 class Deck:
-    deck = Deck_Cards = []
+   
     def __init__(self):
-        self.deck = Deck_Cards = []
+        self.deck_cards = []
         for rank in range(2,15):
             for suit in "hdcs":
                 card = Card(rank,suit)
-                self.Deck_Cards.append(card)
+                self.deck_cards.append(card)
     def shuffle(self):
-        random.shuffle(self.Deck_Cards)
+        random.shuffle(self.deck_cards)
     def deal_card(self, num_deal):
-        return [self.Deck_Cards.pop() for num in range(num_deal)]
+        return [self.deck_cards.pop() for num in range(num_deal)]
         
     def deal_card_choice(self, selected_card):
-        self.Deck_Cards.remove(selected_card)
+        self.deck_cards.remove(selected_card)
         return selected_card
 
 
