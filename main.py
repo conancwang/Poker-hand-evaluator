@@ -268,6 +268,7 @@ class Deck:
         self.deck_cards.remove(selected_card)
         return selected_card
 
+if __name__ == "__main__":
+    main()
 
-main()
 
